@@ -1,9 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using TetrisGame.Debug;
 
 namespace TetrisGame.Systems
 {
-    public class MouseStateExtended : IUpdatable
+    public class MouseStateExtended : IUpdatable, IDebugText
     {
         private MouseState currentState;
         public MouseState PreviousState { get; set; }
@@ -42,6 +43,7 @@ namespace TetrisGame.Systems
         public bool IsLeftButtonUp => CurrentState.LeftButton == ButtonState.Released && PreviousState.LeftButton == ButtonState.Pressed;
         public bool IsRightButtonUp => CurrentState.RightButton == ButtonState.Released && PreviousState.RightButton == ButtonState.Pressed;
 
+        public string DebugText => $"X: {X} Y: {Y}";
         public void Update(GameTime gameTime)
         {
 

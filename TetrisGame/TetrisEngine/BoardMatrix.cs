@@ -3,13 +3,14 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using TetrisGame.Systems;
+using TetrisGame.Debug;
 
 namespace TetrisGame.TetrisEngine
 {
     /// <summary>
     /// Represents a logical board matrix for Tetris. It will hold the current block on the board as well as where the blocks have landed.
     /// </summary>
-    internal class BoardMatrix
+    internal class BoardMatrix : IDebugText
     {
         const int COLS = 10;
         const int ROWS = 20;
@@ -33,6 +34,10 @@ namespace TetrisGame.TetrisEngine
         private int autoFallRate = 0;
         public List<List<Block>> Matrix => matrix;
 
+        public string DebugText => BoardState.ToString();
+
+        public List<int> rowsToEliminate;
+
         public BoardMatrix(Dictionary<Shape, Texture2D> squares)
         {
             this.squares = squares;
@@ -47,10 +52,8 @@ namespace TetrisGame.TetrisEngine
                 }
             }
             lockTimer.Stop();
-            lockTimer.Tick += (sender, e) =>
-            {
-                BoardState = State.Completion;
-            };
+            lockTimer.Tick += doFullLock;
+            Globals.TextRenderer?.Register(this);
         }
 
         /// <summary>
@@ -110,44 +113,143 @@ namespace TetrisGame.TetrisEngine
             switch (BoardState)
             {
                 case State.Generation:
-                    curr = new OShape(new Point(5, 19));
-                    BoardState = State.Falling;
+                    doGeneration();
                     break;
                 case State.Falling:
-                    if (autoFallRate == levelSpeeds[Level])
-                    {
-                        if (isValidLocation(curr.GetMovement(Movement.Down, 1)))
-                        {
-                            curr.Move(Movement.Down, 1);
-                        }
-                        else
-                        {
-                            BoardState = State.Locking;
-                            lockTimer.Restart();
-                        }
-                        autoFallRate = 0;
-                    }
-                    else
-                    {
-                        autoFallRate++;
-                    }
+                    doFalling();
+                    break;
+                case State.Locking:
+                    doLocking();
                     break;
                 case State.Completion:
                     doCompletion();
-                    BoardState = State.Generation;
+                    break;
+                case State.CheckPattern:
+                    doCheckPattern();
+                    break;
+                case State.Animate:
+                    doAnimate();
+                    break;
+                case State.Eliminate:
+                    doEliminate();
                     break;
             }
         }
 
-        private void doCompletion()
+        /// <summary>
+        /// Remove any marked rows from the board shifting the rows above, down. Award points based on the number of rows cleared.
+        /// </summary>
+        private void doEliminate()
         {
-            if(curr != null)
+            if (rowsToEliminate != null)
+            {
+                var clearCount = rowsToEliminate.Count;
+                for (var i = rowsToEliminate.Count - 1; i >= 0; i--) // elimate rows from bottom to top, one at a time
+                {
+                    var idx = rowsToEliminate[i];
+                    for (var j = 0; j < COLS; j++) // blank out the row to be eliminated
+                    {
+                        placed[j][idx].Square = null;
+                    }
+                    for (var k = idx; k < ROWS - 1; k++) // shift the rows above this one by one row down
+                    {
+                        for (var l = 0; l < COLS; l++)
+                        {
+                            placed[l][k].Square = placed[l][k + 1].Square;
+                        }
+                    }
+                    for (var m = 0; m < COLS; m++) // blank out the top row
+                    {
+                        placed[m][ROWS - 1].Square = null;
+                    }
+                } // do this for every row to be eliminated   
+            }
+            BoardState = State.Completion;
+        }
+
+        private void doAnimate()
+        {
+            BoardState = State.Eliminate;
+        }
+
+        /// <summary>
+        /// Patterns are checked (such as line clear) and those rows are marked for deletion. This takes no extra time(or frames) to complete.
+        /// </summary>
+        private void doCheckPattern()
+        {
+            List<int> rowsToDelete = new List<int>();
+            for (int i = 0; i < ROWS; i++)
+            {
+                bool rowFull = true;
+                for (int j = 0; j < COLS; j++)
+                {
+                    if (placed[j][i].Square == null)
+                    {
+                        rowFull = false;
+                        break;
+                    }
+                }
+                if (rowFull)
+                {
+                    rowsToDelete.Add(i);
+                }
+            }
+            rowsToEliminate = rowsToDelete;
+            BoardState = State.Animate;
+        }
+
+        private void doLocking()
+        {
+            if (isValidLocation(curr.GetMovement(Movement.Down, 1)))
+            {
+                lockTimer.Stop();
+                BoardState = State.Falling;
+            }
+        }
+
+        private void doFullLock(object sender, EventArgs e)
+        {
+            if (curr != null)
             {
                 foreach (var v in curr.Coords)
                 {
                     placed[v.X][v.Y].Square = squares[curr.Shape];
                 }
             }
+            BoardState = State.CheckPattern;
+        }
+
+        private void doFalling()
+        {
+            if (autoFallRate == levelSpeeds[Level])
+            {
+                if (isValidLocation(curr.GetMovement(Movement.Down, 1)))
+                {
+                    curr.Move(Movement.Down, 1);
+                }
+                else
+                {
+                    BoardState = State.Locking;
+                    lockTimer.Restart();
+                }
+                autoFallRate = 0;
+            }
+            else
+            {
+                autoFallRate++;
+            }
+        }
+
+        private void doGeneration()
+        {
+            curr = new OShape(new Point(5, 19));
+            BoardState = State.Falling;
+        }
+
+        private void doCompletion()
+        {
+            BoardState = State.Generation;
+            doGeneration();
         }
 
         private void updateBoardSquares()

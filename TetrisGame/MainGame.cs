@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using TetrisGame.Debug;
 using TetrisGame.Systems;
 
 namespace TetrisGame
@@ -11,7 +12,7 @@ namespace TetrisGame
         private SpriteBatch _spriteBatch;
         private SpriteFont _font;
         private MouseStateExtended _mouseState;
-        private DebugText _debugText;
+        private DebugTextRenderer _debugTextRenderer;
         private FpsUps _fpsUps;
         private Board _board;
         private KeyboardExtended _keyboardExtended;
@@ -42,7 +43,10 @@ namespace TetrisGame
             _font = Content.Load<SpriteFont>("courier");
             _mouseState = new MouseStateExtended(Mouse.GetState(), Mouse.GetState());
             _fpsUps = new FpsUps();
-            _debugText = new DebugText(_font, Window, _mouseState, _fpsUps);
+            _debugTextRenderer = new DebugTextRenderer(_font, Window);
+            Globals.TextRenderer = _debugTextRenderer;
+            _debugTextRenderer.Register(_fpsUps);
+            _debugTextRenderer.Register(_mouseState);
             _keyboardExtended = new KeyboardExtended();
             _board = new Board(Window, _graphics.GraphicsDevice, _keyboardExtended);
         }
@@ -67,7 +71,7 @@ namespace TetrisGame
             // TODO: Add your drawing code here
             _spriteBatch.Begin();
             _fpsUps.Draw(_spriteBatch, gameTime);
-            _debugText.Draw(_spriteBatch, gameTime);
+            _debugTextRenderer.Draw(_spriteBatch, gameTime);
             _board.Draw(_spriteBatch, gameTime);
             _spriteBatch.End();
 

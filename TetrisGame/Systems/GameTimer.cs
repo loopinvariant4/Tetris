@@ -30,7 +30,7 @@ namespace TetrisGame.Systems
             {
                 if (Current == Interval)
                 {
-                    Tick?.Invoke(this, new EventArgs());
+                    Tick?.Invoke(this, null);
                     if (loop)
                     {
                         Current = 0;
