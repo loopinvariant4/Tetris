@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using System;
 using System.Collections.Generic;
 
 namespace TetrisGame.Systems
@@ -9,7 +10,9 @@ namespace TetrisGame.Systems
         /// <summary>
         /// This event handler handles a key being pressed as well as introduce a frame delay if the key is held down
         /// </summary>
-        public event System.EventHandler<Keys> KeyPressed;
+        public event EventHandler<Keys> KeyDownSlow;
+
+        public event EventHandler<Keys> KeyUp;
 
         private int frameDelay = 5;
 
@@ -37,18 +40,19 @@ namespace TetrisGame.Systems
                     keyFrames[key]++;
                     if (keyFrames[key] % frameDelay == 0)
                     {
-                        KeyPressed?.Invoke(this, key);
+                        KeyDownSlow?.Invoke(this, key);
                     }
                 }
                 else
                 {
                     keyFrames.Add(key, 0);
-                    KeyPressed?.Invoke(this, key);
+                    KeyDownSlow?.Invoke(this, key);
                 }
             }
             foreach (var key in state.GetUpKeys())
             {
                 keyFrames.Remove(key);
+                KeyUp?.Invoke(this, key);
             }
         }
 

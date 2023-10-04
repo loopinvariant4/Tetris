@@ -9,6 +9,9 @@ namespace TetrisGame.TetrisEngine
         {
         }
 
+        /// <summary>
+        /// Always return a new array of points. This is to prevent the user from modifying the original array.
+        /// </summary>
         public override Point[] Coords => new Point[]
                 {
                     new Point(NorthPosition.X, NorthPosition.Y),

@@ -27,7 +27,8 @@ namespace TetrisGame
         {
             this.window = window;
             this.keyboard = keyboard;
-            keyboard.KeyPressed += handleInput;
+            keyboard.KeyDownSlow += handleKeyDownSlow;
+            keyboard.KeyUp += handleKeyUp;
             int heightMargin = (int)(window.ClientBounds.Height * 0.10);
             int widthMargin = (int)(window.ClientBounds.Width * 0.40);
             boardSize = new Vector2(blockSize.X * 10, blockSize.Y * 20);
@@ -92,20 +93,31 @@ namespace TetrisGame
             updateBoardBlocks();
         }
 
-        private void handleInput(object sender, Keys key)
+        private void handleKeyDownSlow(object sender, Keys key)
         {
             switch (key)
             {
-                case Microsoft.Xna.Framework.Input.Keys.Left:
+                case Keys.Left:
                     boardMatrix.HandleCommand(Command.LEFT);
                     break;
-                case Microsoft.Xna.Framework.Input.Keys.Right:
+                case Keys.Right:
                     boardMatrix.HandleCommand(Command.RIGHT);
                     break;
-                case Microsoft.Xna.Framework.Input.Keys.Down:
+                case Keys.Down:
                     boardMatrix.HandleCommand(Command.SOFTDROP);
                     break;
             }
+        }
+
+        private void handleKeyUp(object sender, Keys key)
+        {
+            switch (key)
+            {
+                case Keys.Space:
+                    boardMatrix.HandleCommand(Command.HARDDROP);
+                    break;
+            }
+
         }
 
         private void updateBoardBlocks()

@@ -83,7 +83,29 @@ namespace TetrisGame.TetrisEngine
                         autoFallRate = 0; //reset the autoFallRate since we dont want both user initiated and auto initiated movement at the same time
                     }
                     break;
+                case Command.HARDDROP:
+                    curr.Move(Movement.Down, calcHardDropSteps());
+                    autoFallRate = 0;
+                    doFullLock(null, null);
+                    break;
             }
+        }
+
+        private int calcHardDropSteps()
+        {
+            var steps = 0;
+            while (true)
+            {
+                if (isValidLocation(curr.GetMovement(Movement.Down, steps)))
+                {
+                    steps++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            return steps - 1;
         }
 
         private bool isValidLocation(Point[] loc)
