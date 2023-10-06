@@ -51,6 +51,9 @@ namespace TetrisGame.TetrisEngine
         /// <returns></returns>
         public abstract Point GetNextNorthMovement(Movement move, int steps = 1);
 
+
+        public abstract Tetrimino Clone();
+
         /// <summary>
         /// Set the new Rotation statet of the tetrimino and set the new NorthPosition
         /// </summary>

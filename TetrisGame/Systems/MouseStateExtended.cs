@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using TetrisGame.Debug;
+using TetrisGame.Debugger;
 
 namespace TetrisGame.Systems
 {

@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using TetrisGame.Systems;
-using TetrisGame.Debug;
+using TetrisGame.Debugger;
 
 namespace TetrisGame.TetrisEngine
 {
@@ -16,7 +16,8 @@ namespace TetrisGame.TetrisEngine
         const int ROWS = 20;
         private List<List<Block>> matrix = new List<List<Block>>(ROWS);
         private List<List<Block>> placed = new List<List<Block>>(ROWS);
-        private Tetrimino curr;
+        private Tetrimino curr; // this is the current tetrimino that is falling
+        private Tetrimino finalMino; // this mino holds the future position of the current tetrimino if a hard drop is performed
         private GameTimer lockTimer = new GameTimer(30, false); // this timer allows the player to move the tetrimino for 30 frames in locking phase. This is 0.5s assuming 60 FPS.
         private Dictionary<Shape, Texture2D> squares;
 
@@ -127,7 +128,14 @@ namespace TetrisGame.TetrisEngine
         public void UpdateBoard()
         {
             updateBoardState();
+            updateFinalMinoState();
             updateBoardSquares();
+        }
+
+        private void updateFinalMinoState()
+        {
+            finalMino = curr.Clone();
+            finalMino.Move(Movement.Down, calcHardDropSteps());
         }
 
         private void updateBoardState()
@@ -283,10 +291,18 @@ namespace TetrisGame.TetrisEngine
                     matrix[i][j].Square = placed[i][j].Square;
                 }
             }
+            if (State.Falling == BoardState)
+            {
+                foreach (var c in finalMino.Coords)
+                {
+                    matrix[c.X][c.Y].Square = squares[Shape.Final];
+                }
+            }
             foreach (var v in curr.Coords)
             {
                 matrix[v.X][v.Y].Square = squares[curr.Shape];
             }
+
         }
     }
 }

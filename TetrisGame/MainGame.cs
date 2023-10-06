@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using TetrisGame.Debug;
+using TetrisGame.Debugger;
 using TetrisGame.Systems;
 
 namespace TetrisGame

@@ -8,6 +8,7 @@
         L,
         J,
         S,
-        Z
+        Z,
+        Final   // this means the future final location this piece will occupy
     }
 }

@@ -44,8 +44,14 @@ namespace TetrisGame
 
             square = new Texture2D(device, 1, 1, false, SurfaceFormat.Color);
             square.SetData(new[] { Color.Red });
+
+            var final = new Texture2D(device, 1, 1, false, SurfaceFormat.Color);
+            final.SetData(new[] { Color.DarkGray});
+
             boardMatrix = new BoardMatrix(new Dictionary<Shape, Texture2D>{
-                { Shape.O, square } });
+                { Shape.O, square },
+                { Shape.Final, final}
+            });
         }
 
         private void resetBoard()
