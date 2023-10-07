@@ -1,0 +1,10 @@
+1. Smoothen the key press by introducing an initial keydown delay and if it is continuously pressed then have a lower delay. This ensures users with slow taps dont jump two squares but it is fast for continuous presses.
+This was a simple trick achieved by decrementing the frameDelay to 0 instead of incrementing it. Insight: This also serves as a future instruction where one could decrement counters to 0 and avoid a modulus operation.
+
+2. Use of a painted rectangle instead of 2d textures to speed up the initial process
+
+3. Separate out the classes that interact with the framework and OS from the pure game logic. This allows for easier testing.
+
+4. Document all your code. For games, we introduce a number of additional variables, states and functions to help with smoothening the gameplay
+optimising the code. When you return to your game after a while and you have no idea why something was introduced, it can be demoralising to continue working on this
+codebase. So ensure you document everything. It will pay off.

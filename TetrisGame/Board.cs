@@ -18,7 +18,6 @@ namespace TetrisGame
         readonly Vector2 boardSize;
         readonly Vector2 boardPosition;
         private Texture2D line;
-        private Texture2D square;
         const float BOARDTHICKNESS = 8f;
         private BoardMatrix boardMatrix;
         private KeyboardExtended keyboard;
@@ -42,14 +41,18 @@ namespace TetrisGame
             line = new Texture2D(device, 1, 1, false, SurfaceFormat.Color);
             line.SetData(new[] { Color.White });
 
-            square = new Texture2D(device, 1, 1, false, SurfaceFormat.Color);
-            square.SetData(new[] { Color.Red });
+            var yellow = new Texture2D(device, 1, 1, false, SurfaceFormat.Color);
+            yellow.SetData(new[] { Color.Yellow });
+
+            var lightBlue = new Texture2D(device, 1, 1, false, SurfaceFormat.Color);
+            lightBlue.SetData(new[] { Color.LightBlue });
 
             var final = new Texture2D(device, 1, 1, false, SurfaceFormat.Color);
-            final.SetData(new[] { Color.DarkGray});
+            final.SetData(new[] { Color.DarkGray });
 
             boardMatrix = new BoardMatrix(new Dictionary<Shape, Texture2D>{
-                { Shape.O, square },
+                { Shape.O, yellow },
+                { Shape.I, lightBlue },
                 { Shape.Final, final}
             });
         }
@@ -121,6 +124,9 @@ namespace TetrisGame
             {
                 case Keys.Space:
                     boardMatrix.HandleCommand(Command.HARDDROP);
+                    break;
+                case Keys.Up:
+                    boardMatrix.HandleCommand(Command.ROTATECW);
                     break;
             }
 

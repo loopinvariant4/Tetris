@@ -20,6 +20,7 @@ namespace TetrisGame.TetrisEngine
         private Tetrimino finalMino; // this mino holds the future position of the current tetrimino if a hard drop is performed
         private GameTimer lockTimer = new GameTimer(30, false); // this timer allows the player to move the tetrimino for 30 frames in locking phase. This is 0.5s assuming 60 FPS.
         private Dictionary<Shape, Texture2D> squares;
+        private Queue<Tetrimino> nextTetriminos = new Queue<Tetrimino>();
 
         public State BoardState { get; set; } = State.Generation;
         public int Level { get; set; } = 1;
@@ -66,19 +67,19 @@ namespace TetrisGame.TetrisEngine
             switch (c)
             {
                 case Command.LEFT:
-                    if (isValidLocation(curr.GetMovement(Movement.Left, 1)))
+                    if (isValidLocation(curr.GetNextMovement(Movement.Left, 1)))
                     {
                         curr.Move(Movement.Left, 1);
                     }
                     break;
                 case Command.RIGHT:
-                    if (isValidLocation(curr.GetMovement(Movement.Right, 1)))
+                    if (isValidLocation(curr.GetNextMovement(Movement.Right, 1)))
                     {
                         curr.Move(Movement.Right, 1);
                     }
                     break;
                 case Command.SOFTDROP:
-                    if (isValidLocation(curr.GetMovement(Movement.Down, 1)))
+                    if (isValidLocation(curr.GetNextMovement(Movement.Down, 1)))
                     {
                         curr.Move(Movement.Down, 1);
                         autoFallRate = 0; //reset the autoFallRate since we dont want both user initiated and auto initiated movement at the same time
@@ -89,6 +90,12 @@ namespace TetrisGame.TetrisEngine
                     autoFallRate = 0;
                     doFullLock(null, null);
                     break;
+                case Command.ROTATECW:
+                    if (isValidLocation(curr.GetNextRotation(true)))
+                    {
+                        curr.Rotate(true);
+                    }
+                    break;
             }
         }
 
@@ -97,7 +104,7 @@ namespace TetrisGame.TetrisEngine
             var steps = 0;
             while (true)
             {
-                if (isValidLocation(curr.GetMovement(Movement.Down, steps)))
+                if (isValidLocation(curr.GetNextMovement(Movement.Down, steps)))
                 {
                     steps++;
                 }
@@ -230,7 +237,7 @@ namespace TetrisGame.TetrisEngine
 
         private void doLocking()
         {
-            if (isValidLocation(curr.GetMovement(Movement.Down, 1)))
+            if (isValidLocation(curr.GetNextMovement(Movement.Down, 1)))
             {
                 lockTimer.Stop();
                 BoardState = State.Falling;
@@ -253,7 +260,7 @@ namespace TetrisGame.TetrisEngine
         {
             if (autoFallRate == levelSpeeds[Level])
             {
-                if (isValidLocation(curr.GetMovement(Movement.Down, 1)))
+                if (isValidLocation(curr.GetNextMovement(Movement.Down, 1)))
                 {
                     curr.Move(Movement.Down, 1);
                 }
@@ -272,7 +279,11 @@ namespace TetrisGame.TetrisEngine
 
         private void doGeneration()
         {
-            curr = new OShape(new Point(5, 19));
+            if(nextTetriminos.Count == 0)
+            {
+                generateShuffledMinos();
+            }
+            curr = nextTetriminos.Dequeue();
             BoardState = State.Falling;
         }
 
@@ -303,6 +314,29 @@ namespace TetrisGame.TetrisEngine
                 matrix[v.X][v.Y].Square = squares[curr.Shape];
             }
 
+        }
+
+        /// <summary>
+        /// This method generates a list of minos that is shuffled (Fisher-Yates algo) and inserts it into a queue. This ensures we cycloe through every mino and we never over or under urtilise a shape
+        /// </summary>
+        private void generateShuffledMinos()
+        {
+            Random r = new Random(DateTime.Now.Millisecond);
+            // Shape.I, Shape.J, Shape.L, Shape.O, Shape.S, Shape.T, Shape.Z
+            var arr = new Tetrimino[] { new IShape(new Point(4, 19)), new OShape(new Point(4, 19)) };
+            var n = arr.Length;
+            while(n > 1)
+            {
+                n--;
+                var k = r.Next(n + 1);
+                var tmp = arr[k];
+                arr[k] = arr[n];
+                arr[n] = tmp;
+            }
+            foreach (var s in arr)
+            {
+                nextTetriminos.Enqueue(s);
+            }
         }
     }
 }

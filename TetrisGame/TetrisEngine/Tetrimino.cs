@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 
 namespace TetrisGame.TetrisEngine
 {
@@ -16,9 +17,10 @@ namespace TetrisGame.TetrisEngine
         /// </summary>
         public Point NorthPosition { get; set; } = new Point(0, 0);
 
-        public Tetrimino(Shape shape, Point boardPosition)
+        public Tetrimino(Shape shape, Point boardPosition, int rotation = 0)
         {
             this.Shape = shape;
+            this.Rotation = rotation;
             NorthPosition = boardPosition;
         }
 
@@ -31,7 +33,7 @@ namespace TetrisGame.TetrisEngine
         /// Get the coordinates of all the blocks for the next rotation based off of the current rotation and NorthPosition
         /// </summary>
         /// <returns></returns>
-        public abstract Point[] GetRotation(bool clockwise);
+        public abstract Point[] GetNextRotation(bool clockwise);
 
         /// <summary>
         /// Get the next North coordinate based off of the current rotation and NorthPosition
@@ -43,14 +45,57 @@ namespace TetrisGame.TetrisEngine
         /// Get the coordinates of all the blocks for the next movement based off of the NorthPosition
         /// </summary>
         /// <returns></returns>
-        public abstract Point[] GetMovement(Movement move, int steps = 1);
+        public Point[] GetNextMovement(Movement move, int steps = 1)
+        {
+            var coords = new Point[Coords.Length];
+            switch (move)
+            {
+                case Movement.Left:
+                    for (int i = 0; i < coords.Length; i++)
+                    {
+                        coords[i] = new Point(Coords[i].X - steps, Coords[i].Y);
+                    }
+                    break;
+                case Movement.Right:
+                    for (int i = 0; i < coords.Length; i++)
+                    {
+                        coords[i] = new Point(Coords[i].X + steps, Coords[i].Y);
+                    }
+                    break;
+                case Movement.Down:
+                    for (int i = 0; i < coords.Length; i++)
+                    {
+                        coords[i] = new Point(Coords[i].X, Coords[i].Y - steps);
+                    }
+                    break;
+                case Movement.Drop:
+                    throw new NotImplementedException();
+                default:
+                    break;
+            }
+            return coords;
+        }
 
         /// <summary>
         /// Get the next North coordinate based off of the current NorthPosition and the movement
         /// </summary>
         /// <returns></returns>
-        public abstract Point GetNextNorthMovement(Movement move, int steps = 1);
-
+        public Point GetNextNorthMovement(Movement move, int steps = 1)
+        {
+            switch (move)
+            {
+                case Movement.Left:
+                    return new Point(NorthPosition.X - steps, NorthPosition.Y);
+                case Movement.Right:
+                    return new Point(NorthPosition.X + steps, NorthPosition.Y);
+                case Movement.Down:
+                    return new Point(NorthPosition.X, NorthPosition.Y - steps);
+                case Movement.Drop:
+                    throw new NotImplementedException();
+                default:
+                    throw new NotImplementedException();
+            }
+        }
 
         public abstract Tetrimino Clone();
 
@@ -59,8 +104,8 @@ namespace TetrisGame.TetrisEngine
         /// </summary>
         public void Rotate(bool clockwise)
         {
-            Rotation = clockwise ? (Rotation + 1) % 4 : (Rotation == 0 ? 3 : Rotation - 1);
             NorthPosition = GetNextNorthRotation(clockwise);
+            Rotation = getNextRotationIndex(clockwise);
         }
 
         /// <summary>
@@ -72,104 +117,6 @@ namespace TetrisGame.TetrisEngine
             NorthPosition = GetNextNorthMovement(move, steps);
         }
 
-
-
-        /*
-        public Vector2[] GetRotation(bool clockwise) => Tetriminos(shape, rotateI(clockwise), nextR(clockwise));
-
-        private Vector2 rotateI(bool clockwise)
-        {
-            if (clockwise)
-            {
-                switch (Rotation)
-                {
-                    case 0:
-                        return new Vector2(BoardPosition.X + 2, BoardPosition.Y - 1);
-                    case 1:
-                        return new Vector2(BoardPosition.X + 1, BoardPosition.Y - 2);
-                    case 2:
-                        return new Vector2(BoardPosition.X - 2, BoardPosition.Y - 1);
-                    case 3:
-                        return new Vector2(BoardPosition.X - 1, BoardPosition.Y + 2);
-                }
-            }
-            else
-            {
-                switch (Rotation)
-                {
-                    case 0:
-                        return new Vector2(BoardPosition.X + 1, BoardPosition.Y - 2);
-                    case 1:
-                        return new Vector2(BoardPosition.X - 2, BoardPosition.Y - 1);
-                    case 2:
-                        return new Vector2(BoardPosition.X - 2, BoardPosition.Y + 2);
-                    case 3:
-                        return new Vector2(BoardPosition.X + 2, BoardPosition.Y + 1);
-                }
-            }
-            Debug.Assert(1 == 1, "Code should not reach here for I-rotation");
-            return new Vector2(0, 0);
-        }
-
-        private int nextR(bool clockwise)
-        {
-            if (clockwise)
-            {
-                return (Rotation + 1) % 4;
-            }
-            else if (Rotation == 0)
-            {
-                return 3;
-            }
-            else
-            {
-                return Rotation - 1;
-            }
-        }
-
-        private Vector2[] Tetriminos(Shape shape, Vector2 boardPosition, int rotation)
-        {
-            var coords = new Vector2[4];
-            switch (shape)
-            {
-                case Shape.O:
-                    coords[0] = new Vector2(boardPosition.X, boardPosition.Y);
-                    coords[1] = new Vector2(boardPosition.X + 1, boardPosition.Y);
-                    coords[2] = new Vector2(boardPosition.X + 1, boardPosition.Y - 1);
-                    coords[3] = new Vector2(boardPosition.X, boardPosition.Y - 1);
-                    break;
-                case Shape.I:
-                    switch (rotation)
-                    {
-                        case 0:
-                            coords[0] = new Vector2(boardPosition.X, boardPosition.Y);
-                            coords[1] = new Vector2(boardPosition.X + 1, boardPosition.Y);
-                            coords[2] = new Vector2(boardPosition.X + 2, boardPosition.Y);
-                            coords[3] = new Vector2(boardPosition.X + 3, boardPosition.Y);
-                            break;
-                        case 1:
-                            coords[0] = new Vector2(boardPosition.X, boardPosition.Y);
-                            coords[1] = new Vector2(boardPosition.X, boardPosition.Y - 1);
-                            coords[2] = new Vector2(boardPosition.X, boardPosition.Y - 2);
-                            coords[3] = new Vector2(boardPosition.X, boardPosition.Y - 3);
-                            break;
-                        case 2:
-                            coords[0] = new Vector2(boardPosition.X, boardPosition.Y);
-                            coords[1] = new Vector2(boardPosition.X - 1, boardPosition.Y);
-                            coords[2] = new Vector2(boardPosition.X - 2, boardPosition.Y);
-                            coords[3] = new Vector2(boardPosition.X - 3, boardPosition.Y);
-                            break;
-                        case 3:
-                            coords[0] = new Vector2(boardPosition.X, boardPosition.Y);
-                            coords[1] = new Vector2(boardPosition.X, boardPosition.Y + 1);
-                            coords[2] = new Vector2(boardPosition.X, boardPosition.Y + 2);
-                            coords[3] = new Vector2(boardPosition.X, boardPosition.Y + 3);
-                            break;
-                    }
-                    break;
-            }
-            return coords;
-        }
-        */
+        protected int getNextRotationIndex(bool clockwise) => clockwise ? (Rotation + 1) % 4 : (Rotation == 0 ? 3 : Rotation - 1);
     }
 }

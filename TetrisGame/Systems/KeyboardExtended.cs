@@ -14,7 +14,17 @@ namespace TetrisGame.Systems
 
         public event EventHandler<Keys> KeyUp;
 
-        private int frameDelay = 5;
+        /// <summary>
+        /// This is the number of frames to wait before triggering the KeyDownSlow event
+        /// </summary>
+        private int frameDelay = 2;  
+
+        /// <summary>
+        /// This is the number of frames to wait when the key is first pressed before triggering the KeyDownSlow event. 
+        /// This ensures that we dont skip frames too fast if the user actually meant to tap the keyboard but the frameDelay 
+        /// has a lower value to make sure continuous keydown feels fast
+        /// </summary>
+        private int initialFrameDelay = 10; 
 
         private Dictionary<Keys, int> keyFrames = new Dictionary<Keys, int>();
 
@@ -37,15 +47,16 @@ namespace TetrisGame.Systems
             {
                 if (keyFrames.ContainsKey(key))
                 {
-                    keyFrames[key]++;
-                    if (keyFrames[key] % frameDelay == 0)
+                    keyFrames[key]--;
+                    if (keyFrames[key] == 0)
                     {
                         KeyDownSlow?.Invoke(this, key);
+                        keyFrames[key] = frameDelay;
                     }
                 }
                 else
                 {
-                    keyFrames.Add(key, 0);
+                    keyFrames.Add(key, initialFrameDelay);
                     KeyDownSlow?.Invoke(this, key);
                 }
             }
